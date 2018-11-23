@@ -20,8 +20,12 @@ static NSString *kCollectionHeader = @"CollectionHeader";
     
     BOOL _hasInitStartContentOffset;
     
+    
     Class _headerClass;
     
+    CGFloat _oldContentOffsetY;
+    
+    BOOL _willChangeBound;
     
 }
 @property (nonatomic, strong) UICollectionViewLayoutAttributes *collectionHeaderLayoutAttributes;
@@ -63,8 +67,9 @@ static NSString *kCollectionHeader = @"CollectionHeader";
     [super prepareLayout];
     if (_needReloadData) {
         [self loadData];
+    } else {
+        [self updateHeaderLayout];
     }
-    [self updateHeaderLayout];
     
 }
 
@@ -111,6 +116,8 @@ static NSString *kCollectionHeader = @"CollectionHeader";
             attribute.frame = (CGRect){0, startYForSection, attribute.frame.size};
         }
     }];
+    
+    
 }
 
 - (void)loadData {
@@ -119,7 +126,7 @@ static NSString *kCollectionHeader = @"CollectionHeader";
         _startContentOffset = self.collectionView.contentOffset;
         _hasInitStartContentOffset = YES;
     }
-
+    
     self.startY = 0;
     //重新布局需要清空
     [self.cellLayoutInfo removeAllObjects];
@@ -142,7 +149,17 @@ static NSString *kCollectionHeader = @"CollectionHeader";
         _itemWidth = (contentWidth - self.columnSpacing * (self.numberOfColumns - 1))/self.numberOfColumns;
         [self calSectionHeaderWithSection:section];
         [self calItemFrameWithSection:section];
-        [self calSectionFooterWithSection:section];
+    }
+    
+    // 重新布局之后，如果collection不会滚动，则不会再次调用 prepareLayout，将导致不会重新计算区头的位置
+    // 当总高度 - 当前偏移 = 剩下高度，大于视图的高度时，collectionView 是不会滚动的
+    // 此时需要手动更新区头设置
+    CGFloat height = self.collectionView.frame.size.height;
+    if (@available(iOS 11.0, *)) {
+        height = self.collectionView.frame.size.height  - self.collectionView.safeAreaInsets.bottom;
+    }
+    if (self.startY - self.collectionView.contentOffset.y >= height) {
+        [self updateHeaderLayout];
     }
 }
 
@@ -226,21 +243,6 @@ static NSString *kCollectionHeader = @"CollectionHeader";
 
 
 
-#pragma mark ---区尾
-- (void)calSectionFooterWithSection:(NSInteger)section {
-    NSIndexPath *supplementaryViewIndexPath = [NSIndexPath indexPathForRow:0 inSection:section];
-    
-    if (_footViewHeight > 0 && [self.collectionView.dataSource respondsToSelector:@selector(collectionView:viewForSupplementaryElementOfKind:atIndexPath:)]) {
-        
-        UICollectionViewLayoutAttributes *attribute = [UICollectionViewLayoutAttributes layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionFooter withIndexPath:supplementaryViewIndexPath];
-        
-        attribute.frame = CGRectMake(0, self.startY, self.collectionView.frame.size.width, _footViewHeight);
-        self.footLayoutInfo[supplementaryViewIndexPath] = attribute;
-        
-        self.startY = self.startY + _footViewHeight;
-    }
-}
-
 #pragma mark - deleagte
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
@@ -252,7 +254,7 @@ static NSString *kCollectionHeader = @"CollectionHeader";
             [allAttributes addObject:_collectionHeaderLayoutAttributes];
         }
     }
-
+    
     //添加当前屏幕可见的secton头视图的布局
     [self.headLayoutInfo enumerateKeysAndObjectsUsingBlock:^(NSIndexPath *indexPath, UICollectionViewLayoutAttributes *attribute, BOOL *stop) {
         if (CGRectIntersectsRect(rect, attribute.frame)) {
@@ -267,12 +269,6 @@ static NSString *kCollectionHeader = @"CollectionHeader";
         }
     }];
     
-    //添加当前屏幕可见的section尾部的布局
-    [self.footLayoutInfo enumerateKeysAndObjectsUsingBlock:^(NSIndexPath *indexPath, UICollectionViewLayoutAttributes *attribute, BOOL *stop) {
-        if (CGRectIntersectsRect(rect, attribute.frame)) {
-            [allAttributes addObject:attribute];
-        }
-    }];
     
     return allAttributes;
 }
@@ -286,6 +282,10 @@ static NSString *kCollectionHeader = @"CollectionHeader";
     return self.sectionHeadersPinToVisibleBounds && [self.collectionView.dataSource respondsToSelector:@selector(collectionView:viewForSupplementaryElementOfKind:atIndexPath:)] && _headerViewHeight > 0;
 }
 
+
+- (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath {
+    return self.cellLayoutInfo[indexPath];
+}
 - (void)registerCollectionHeaderClass:(Class)headerClass {
     _headerClass = headerClass;
     [self registerClass:headerClass forDecorationViewOfKind:kCollectionHeader];

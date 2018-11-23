@@ -35,7 +35,7 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 120, 120)];
-        label.text = @"dsadsadasdsa";
+        label.text = @"Section Header";
         [self addSubview:label];
     }
     return self;
@@ -43,7 +43,9 @@
 
 @end
 
-@interface WaterfallViewController ()<UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, DDCollectionViewLayoutDelegate>
+@interface WaterfallViewController ()<UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, DDCollectionViewLayoutDelegate> {
+    NSInteger _itemCount;
+}
 @property (strong, nonatomic) UICollectionView *waterfallLayoutCollectionView;
 @property (nonatomic, strong) DDWaterfallLayout *layout;
 @end
@@ -53,6 +55,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"瀑布流";
+    _itemCount = 80;
     self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:self.waterfallLayoutCollectionView];
     UIBarButtonItem *rightBarItem = [[UIBarButtonItem alloc] initWithTitle:@"Reload" style:UIBarButtonItemStylePlain target:self action:@selector(changeHeader)];
@@ -60,13 +63,14 @@
 }
 
 - (void)changeHeader {
+    _itemCount = 82;
     [_waterfallLayoutCollectionView reloadData];
     
 }
 
 #pragma mark - deleagte
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return 80;
+    return _itemCount;
 }
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {

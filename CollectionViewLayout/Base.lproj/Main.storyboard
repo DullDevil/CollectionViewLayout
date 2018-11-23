@@ -26,7 +26,7 @@
             </objects>
             <point key="canvasLocation" x="-670" y="155"/>
         </scene>
-        <!--View Controller-->
+        <!--Collection Layout-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
@@ -52,7 +52,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <navigationItem key="navigationItem" id="r7l-71-dgx"/>
+                    <navigationItem key="navigationItem" title="Collection Layout" id="eyA-y0-6hp"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>

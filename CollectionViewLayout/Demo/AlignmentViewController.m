@@ -9,7 +9,9 @@
 #import "AlignmentViewController.h"
 #import "DDAlignmentLayout.h"
 
-@interface AlignmentViewController ()<UICollectionViewDataSource,DDAlignmentLayoutDelegate,UICollectionViewDelegate>
+@interface AlignmentViewController ()<UICollectionViewDataSource,DDAlignmentLayoutDelegate,UICollectionViewDelegate> {
+    NSInteger _itemCount;
+}
 @property (strong, nonatomic) UICollectionView *collectionView;
 @property (nonatomic, strong) DDAlignmentLayout *layout;
 @end
@@ -18,13 +20,21 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    _itemCount = 150;
     self.title = @"对齐布局-居中";
     [self.view addSubview:self.collectionView];
-   
+    UIBarButtonItem *rightBarItem = [[UIBarButtonItem alloc] initWithTitle:@"Reload" style:UIBarButtonItemStylePlain target:self action:@selector(changeHeader)];
+    self.navigationItem.rightBarButtonItem = rightBarItem;
+}
+
+- (void)changeHeader {
+    _itemCount = 100;
+    [self.collectionView reloadData];
+    
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return 120;
+    return _itemCount;
 }
 
 
