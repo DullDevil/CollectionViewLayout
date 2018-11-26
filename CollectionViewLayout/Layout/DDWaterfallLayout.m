@@ -151,17 +151,20 @@ static NSString *kCollectionHeader = @"CollectionHeader";
         [self calItemFrameWithSection:section];
     }
     
-    // 重新布局之后，如果collection不会滚动，则不会再次调用 prepareLayout，将导致不会重新计算区头的位置
-    // 当总高度 - 当前偏移 = 剩下高度，大于视图的高度时，collectionView 是不会滚动的
-    // 此时需要手动更新区头设置
-    CGFloat height = self.collectionView.frame.size.height;
+    CGFloat maxContentOffsetY = self.startY - CGRectGetHeight(self.collectionView.bounds);
+    
     if (@available(iOS 11.0, *)) {
-        height = self.collectionView.frame.size.height  - self.collectionView.safeAreaInsets.bottom;
+        maxContentOffsetY = self.startY - CGRectGetHeight(self.collectionView.bounds) + self.collectionView.safeAreaInsets.bottom;
     }
-    if (self.startY - self.collectionView.contentOffset.y >= height) {
+    
+    // 重新布局之后，如果collection不会滚动，则不会再次调用 prepareLayout，将导致不会重新计算区头的位置
+    // 如果当前CollectionView 的 contentOffset.y 小于等于 最大可偏移量，则collection 是不会滚动的
+    // 此时需要手动更新区头设置
+    if (self.collectionView.contentOffset.y <= maxContentOffsetY) {
         [self updateHeaderLayout];
     }
 }
+
 
 #pragma mark - 计算位置
 // collection 头部视图
